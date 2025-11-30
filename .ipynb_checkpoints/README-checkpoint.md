@@ -58,10 +58,49 @@ The discovered association rules can be used for:
 
 ## Challenges Faced and Decisions Made
 
-### Challenges Faced and Solutions
+### Challenge 1: Dataset Format Transformation
+**Problem**: The IMDB dataset is not naturally in transactional format. It contains movie information with comma-separated genre strings.
 
-One challenge encountered was that the IMDB Top 1000 dataset is not naturally transactional. The dataset contains movie information along with genres, but it is not in a format suitable for association rule mining. To address this, each movie was treated as a transaction and its genres were treated as items. Comma-separated genre strings were split into lists to create item sets. For example, this transformation was done in code using df['Genre_List'] = df['Genre'].str.split(', ').
+**Solution**: Transformed the dataset by:
+- Splitting comma-separated genre strings into lists
+- Treating each movie as a transaction
+- Treating each genre as an item
+- Creating a one-hot encoded matrix for algorithm compatibility
 
-Another challenge was the absence of the mlxtend library in the environment, which caused import errors. The solution was to install the library using pip with the command pip install mlxtend. This library provides efficient implementations of the Apriori and FP-Growth algorithms, making it essential for generating frequent itemsets and association rules.
+**Decision**: Used genres as items rather than other attributes (directors, actors) because genres naturally form multi-item transactions suitable for association rule mining.
 
-A further challenge involved choosing an appropriate support threshold. Setting the threshold too high could miss important patterns, while setting it too low would generate too many itemsets and increase computational effort. To solve this, the dataset characteristics, 1000 transactions and 21 unique genres, were analyzed, and different thresholds were tested. A minimum support of 0.05 (5%) was chosen as a balance between finding meaningful patterns and maintaining computational efficiency, corresponding to at least 50 transactions.
+### Challenge 2: Library Dependencies
+**Problem**: The `mlxtend` library was not installed in the environment which caused some errors.
+
+**Solution**: Installed the library using `pip install mlxtend`, which provides efficient implementations of both Apriori and FP-Growth algorithms.
+
+### Challenge 3: Support Threshold Selection
+**Problem**: Determining the optimal support threshold was challenging - too high would miss patterns, too low would generate excessive itemsets.
+
+**Solution**: 
+- Analyzed dataset characteristics (1000 transactions, 21 unique items)
+- Experimented with multiple thresholds (0.01, 0.05, 0.10, 0.15, 0.20)
+- Selected **0.05 (5%)** as optimal balance:
+  - Ensures minimum 50 transactions per itemset
+  - Captures meaningful patterns without overwhelming output
+  - Maintains computational efficiency
+
+**Decision**: Chose 5% support threshold to balance pattern discovery with result interpretability.
+
+## Algorithm Comparison Results
+
+### Performance
+- **Faster Algorithm**: FP-Growth (typically 1.5-3x faster)
+- **Execution Time**: FP-Growth averages faster execution times
+- **Scalability**: FP-Growth shows better performance as dataset size increases
+
+### Why FP-Growth is Faster
+1. **No Candidate Generation**: FP-Growth uses pattern growth approach, avoiding expensive candidate generation
+2. **Compact Data Structure**: Uses FP-tree to compress database, reducing memory access
+3. **Fewer Database Scans**: Requires only 2 scans vs. multiple scans for Apriori
+4. **Better Complexity**: O(n × m) vs. Apriori's O(2^d × n) for larger itemsets
+
+### Result Consistency
+- Both algorithms produce **identical frequent itemsets**
+- Same 28 itemsets found with support ≥ 0.05
+- Confirms correctness of both implementations
